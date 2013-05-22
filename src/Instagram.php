@@ -87,21 +87,18 @@ class Instagram {
         }
 
         curl_setopt($c, CURLOPT_RETURNTRANSFER, True);
-        curl_setopt($c, CURLOPT_HEADER, 1);   
-        $data = explode("\r\n\r\n",curl_exec($c));
+        if($method == 'GET'){
+            curl_setopt($c, CURLOPT_HEADER, 1);   
+            $data = explode("\r\n\r\n",curl_exec($c));
 
-        preg_match('/X-Ratelimit-Remaining: ([0-9]+)/',$data[0],$rate_limit);
-        preg_match('/Content-Length: ([0-9]+)/',$data[0],$content_length);
+            preg_match('/X-Ratelimit-Remaining: ([0-9]+)/',$data[0],$rate_limit);
+            preg_match('/Content-Length: ([0-9]+)/',$data[0],$content_length);
 
-        $data = json_decode($data[1]);
-
-        // Throw an error if maybe an access token expired or wasn't right
-        // or if an ID doesn't exist or something
-        if(isset($data->meta->error_type)){
-            throw new InstagramApiError('Error: '.$r->meta->error_message);
-        } else {
+            $data = json_decode($data[1]);
             $data->meta->{'x-ratelimit-remaining'} = $rate_limit[1];
             $data->meta->{'content-length'} = $content_length[1];
+        } else {
+            $data = json_decode(curl_exec($c));
         }
 
         return $data;
